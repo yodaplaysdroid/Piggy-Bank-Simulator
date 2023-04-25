@@ -4,8 +4,7 @@
 #include <sstream>
 #include <sys/types.h>
 #include <sys/stat.h>
-#include <direct.h>
-#include <conio.h>
+// #include <curses.h>
 #include <limits>
 #include <vector>
 #include <cstdio>
@@ -291,7 +290,7 @@ class Menu {
 		
 		bool get_date() {
 			string year, month, day;
-			char user_input;
+			string user_input;
 
 			while (true) {
 				cout << "\nEnter Date\nYear  : ";
@@ -304,9 +303,9 @@ class Menu {
 					cout << "\nPlease enter valid date!" << endl;
 					cout << "\nPress any key to continue (x to exit)" << endl;
 					cout << ">> ";
-					user_input = getch();
+					cin >> user_input;
 					cout << "\n";
-					if (user_input == 'x') {
+					if (user_input == "x") {
 						return false;
 					}
 				} else {
@@ -315,7 +314,7 @@ class Menu {
 			}
 		}
 		void change_username() {
-			char user_input;
+			string user_input;
 			string new_username;
 			cout << "\n\nNew Username : ";
 			cin >> new_username;
@@ -327,8 +326,8 @@ class Menu {
 				cout << "Username Unavailable" << endl;
 				cout << "\nPress any key to continue (x to exit)" << endl;
 				cout << ">> ";
-				user_input = getch();
-				if (user_input == 'x') {
+				cin >> user_input;
+				if (user_input == "x") {
 					return;
 				}
 				change_username();
@@ -348,7 +347,7 @@ class Menu {
 				cout << "\nUsername Changed Successfully!" << endl;
 				cout << "\nPress any key to continue..." << endl;
 				cout << ">> ";
-				getch();
+				cin >> user_input;;
 				return;
 			}
 		}
@@ -356,7 +355,7 @@ class Menu {
 		void edit_age() {
 			string temp;
 			int new_age;
-			char user_input;
+			string user_input;
 
 			cout << "\n\nNew Age : ";
 			cin >> temp;
@@ -369,14 +368,14 @@ class Menu {
 				cout << "\nAge Changed Successfully!" << endl;
 				cout << "\nPress any key to continue..." << endl;
 				cout << ">> ";
-				getch();
+				cin >> user_input;;
 				return;
 			} else {
 				cout << "\nPlease Enter Valid Age!" << endl;
 				cout << "\nPress any key to continue (x to exit)" << endl;
 				cout << ">> ";
-				user_input = getch();
-				if (user_input == 'x') {
+				cin >> user_input;
+				if (user_input == "x") {
 					return;
 				}
 				edit_age();
@@ -387,7 +386,7 @@ class Menu {
 			string old_password;
 			string new_password;
 			string new_password_confirmation;
-			char user_input;
+			string user_input;
 
 			cout << "\n\nOld Password : ";
 			cin >> old_password;
@@ -404,14 +403,14 @@ class Menu {
 					cout << "\nPassword Changed Successfully!" << endl;
 					cout << "\nPress any key to continue..." << endl;
 					cout << ">> ";
-					getch();
+					cin >> user_input;
 					return;
 				} else {
 					cout << "\nPassword Not Matching!" << endl;
 					cout << "\nPress any key to continue (x to exit)" << endl;
 					cout << ">> ";
-					user_input = getch();
-					if (user_input == 'x') {
+					cin >> user_input;
+					if (user_input == "x") {
 						return;
 					}
 					change_password();
@@ -420,8 +419,8 @@ class Menu {
 				cout << "\nPassword Incorrect!" << endl;
 				cout << "\nPress any key to continue (x to exit)" << endl;
 				cout << ">> ";
-				user_input = getch();
-				if (user_input == 'x') {
+				cin >> user_input;
+				if (user_input == "x") {
 					return;
 				}
 				change_password();
@@ -429,42 +428,45 @@ class Menu {
 		}
 
 		void edit_account() {
-			char user_input;
+			string user_input;
 
 			while (true) {
-				system("cls");
+				system("clear");
 				cout << "Edit Account Menu\n" << endl;
 				cout << "1 - Edit Username" << endl;
 				cout << "2 - Edit Age" << endl;
 				cout << "3 - Change Password" << endl;
 				cout << "x - Return\n" << endl;
 				cout << ">> ";
-				user_input = getch();
-
-				switch (user_input) {
-					case '1':
-						change_username();
-						return;
-					case '2':
-						edit_age();
-						return;
-					case '3':
-						change_password();
-						return;
-					case 'x':
-						return;
-					default:
-						break;
+				cin >> user_input;
+				if (user_input.length() == 1) {
+					switch (user_input[0]) {
+						case '1':
+							change_username();
+							return;
+						case '2':
+							edit_age();
+							return;
+						case '3':
+							change_password();
+							return;
+						case 'x':
+							return;
+						default:
+							break;
+					}
+				} else {
+					break;
 				}
 			}
 		}
 
 		void cash_deposit_menu() {
-			char user_input;
+			string user_input;
 			string temp;
 			double amount;
 
-			system("cls");
+			system("clear");
 			cout << "Cash Deposit Menu\n" << endl;
 			cout << "Enter Amount : ";
 			cin >> temp;
@@ -473,8 +475,8 @@ class Menu {
 				cout << "Please enter valid amount" << endl;
 				cout << "\nPress any key to continue (x to exit)" << endl;
 				cout << ">> ";
-				user_input = getch();
-				if (user_input == 'x') {
+				cin >> user_input;
+				if (user_input == "x") {
 					return;
 				}
 				cash_deposit_menu();
@@ -484,17 +486,17 @@ class Menu {
 				printf("\nNew Amount : RM %.2f\n\n", current_user.balance);
 				cout << "\nPress any key to continue..." << endl;
 				cout << ">> ";
-				getch();
+				cin >> user_input;
 			}
 			return;
 		}
 
 		void cash_withdrawal_menu() {
-			char user_input;
+			string user_input;
 			string temp;
 			double amount, new_amount;
 
-			system("cls");
+			system("clear");
 			cout << "Cash Withdrawal Menu\n" << endl;
 			cout << "Enter Amount : ";
 			cin >> temp;
@@ -503,8 +505,8 @@ class Menu {
 				cout << "Please enter valid amount" << endl;
 				cout << "\nPress any key to continue (x to exit)" << endl;
 				cout << ">> ";
-				user_input = getch();
-				if (user_input == 'x') {
+				cin >> user_input;
+				if (user_input == "x") {
 					return;
 				}
 				cash_withdrawal_menu();
@@ -514,8 +516,8 @@ class Menu {
 					cout << "Insufficient Balance!" << endl;
 					cout << "\nPress any key to continue (x to exit)" << endl;
 					cout << ">> ";
-					user_input = getch();
-					if (user_input == 'x') {
+					cin >> user_input;
+					if (user_input == "x") {
 						return;
 					}
 					cash_withdrawal_menu();
@@ -525,17 +527,17 @@ class Menu {
 					printf("\nNew Amount : RM %.2f\n\n", new_amount);
 					cout << "\nPress any key to continue..." << endl;
 					cout << ">> ";
-					getch();
+					cin >> user_input;
 				}
 			}
 			return;
 		}
 
 		void account_display() {
-			char user_input;
+			string user_input;
 
 			while (true) {
-				system("cls");
+				system("clear");
 				cout << "My Account\n" << endl;
 				cout << "Username : " << current_user.username << endl;
 				cout << "Age      : " << current_user.age << endl;
@@ -544,34 +546,37 @@ class Menu {
 				cout << "2 - Transaction History" << endl;
 				cout << "x - Return\n" << endl;
 				cout << ">> ";
-				user_input = getch();
-
-				switch (user_input) {
-					case '1':
-						edit_account();
-						break;
-					case '2':
-						system("cls");
-						current_user.show_transactions();
-						cout << "\n\nPress any key to continue..." << endl;
-						cout << ">> ";
-						getch();
-						break;
-					case 'x':
-						return;
-					default:
-						break;
+				cin >> user_input;
+				if (user_input.length() == 1) {
+					switch (user_input[0]) {
+						case '1':
+							edit_account();
+							break;
+						case '2':
+							system("clear");
+							current_user.show_transactions();
+							cout << "\n\nPress any key to continue..." << endl;
+							cout << ">> ";
+							cin >> user_input;
+							break;
+						case 'x':
+							return;
+						default:
+							break;
+					}
+				} else {
+					break;
 				}
 			}
 		}
 
 		void operation_menu() {
-			char user_input;
+			string user_input;
 			string delete_confirmation;
 			string password;
 
 			while (true) {
-				system("cls");
+				system("clear");
 				cout << "Operation Menu" << endl;
 				date.datestamp();
 				cout << "\n\n1 - Cash Deposit" << endl;
@@ -580,71 +585,75 @@ class Menu {
 				cout << "4 - Delete Account" << endl;
 				cout << "x - Logout\n" << endl;
 				cout << ">> ";
-				user_input = getch();
-
-				switch (user_input) {
-					case '1':
-						cash_deposit_menu();
-						break;
-					case '2':
-						cash_withdrawal_menu();
-						break;
-					case '3':
-						account_display();
-						break;
-					case '4':
-						cout << "\n\nEnter Password : ";
-						cin >> password;
-						if (password != current_user.password) {
-							cout << "\nPassword Incorrect" << endl;
-							cout << "Operation Aborted" << endl;
-							cout << "\nPress any key to continue..." << endl;
+				cin >> user_input;
+				
+				if (user_input.length() == 1) {
+					switch (user_input[0]) {
+						case '1':
+							cash_deposit_menu();
+							break;
+						case '2':
+							cash_withdrawal_menu();
+							break;
+						case '3':
+							account_display();
+							break;
+						case '4':
+							cout << "\n\nEnter Password : ";
+							cin >> password;
+							if (password != current_user.password) {
+								cout << "\nPassword Incorrect" << endl;
+								cout << "Operation Aborted" << endl;
+								cout << "\nPress any key to continue..." << endl;
+								cout << ">> ";
+								cin >> user_input;
+								date = Date();
+								current_user = User();
+								return;
+							}
+							cout << "\n\nWarning : Account Delete Confirmation" << endl;
+							cout << "Type 'confirm'" << endl;
 							cout << ">> ";
-							getch();
+							cin >> delete_confirmation;
+							if (delete_confirmation == "confirm") {
+								std::remove(current_user.path.c_str());
+								std::remove(current_user.transaction_path.c_str());
+
+								cout << "\nRemoved Successfully!" << endl;
+								cout << "\nPress any key to continue..." << endl;
+								cout << ">> ";
+								cin >> user_input;
+							} else {
+								cout << "Operation Aborted" << endl;
+								cout << "\nPress any key to continue..." << endl;
+								cout << ">> ";
+								cin >> user_input;
+							}
+
 							date = Date();
 							current_user = User();
 							return;
-						}
-						cout << "\n\nWarning : Account Delete Confirmation" << endl;
-						cout << "Type 'confirm'" << endl;
-						cout << ">> ";
-						cin >> delete_confirmation;
-						if (delete_confirmation == "confirm") {
-							std::remove(current_user.path.c_str());
-							std::remove(current_user.transaction_path.c_str());
-
-							cout << "\nRemoved Successfully!" << endl;
-							cout << "\nPress any key to continue..." << endl;
-							cout << ">> ";
-							getch();
-						} else {
-							cout << "Operation Aborted" << endl;
-							cout << "\nPress any key to continue..." << endl;
-							cout << ">> ";
-							getch();
-						}
-
-						date = Date();
-						current_user = User();
-						return;
-					case 'x':
-						date = Date();
-						current_user = User();
-						return;
-					default:
-						break;
+						case 'x':
+							date = Date();
+							current_user = User();
+							return;
+						default:
+							break;
+					}
+				} else {
+					break;
 				}
 			}
 		}
 
 		void user_login_menu() {
-			char user_input;
+			string user_input;
 			string username;
 			string password;
 			string input_password;
 			string year, month, day;
 
-			system("cls");
+			system("clear");
 			cout << "User Login Page\n" << endl;
 			cout << "Username : ";
 			cin >> username;
@@ -672,8 +681,8 @@ class Menu {
 					cout << "Password Incorrect!" << endl;
 					cout << "\nPress any key to continue (x to exit)" << endl;
 					cout << ">> ";
-					user_input = getch();
-					if (user_input == 'x') {
+					cin >> user_input;
+					if (user_input == "x") {
 						return;
 					}
 					user_login_menu();
@@ -683,8 +692,8 @@ class Menu {
 				cout << "User does not exist!" << endl;
 				cout << "\nPress any key to continue (x to exit)" << endl;
 				cout << ">> ";
-				user_input = getch();
-				if (user_input == 'x') {
+				cin >> user_input;
+				if (user_input == "x") {
 					return;
 				}
 				user_login_menu();
@@ -693,14 +702,14 @@ class Menu {
 		}
 
 		void create_user_menu() {
-			char user_input;
+			string user_input;
 			string username;
 			string password;
 			string confirmation;
 			int age;
 			string tmp;
 
-			system("cls");
+			system("clear");
 			cout << "Create User Page\n" << endl;
 
 			cout << "New Username (Username must be unique) : ";
@@ -715,8 +724,8 @@ class Menu {
 				cout << "Username Unavailable" << endl;
 				cout << "\nPress any key to continue (x to exit)" << endl;
 				cout << ">> ";
-				user_input = getch();
-				if (user_input == 'x') {
+				cin >> user_input;
+				if (user_input == "x") {
 					return;
 				}
 				create_user_menu();
@@ -742,14 +751,14 @@ class Menu {
 					cout << "Balance : RM 0.00" << endl;
 					cout << "\nPress any key to continue..." << endl;
 					cout << ">> ";
-					getch();
+					cin >> user_input;
 					return;
 				} else {
 					cout << "\nPlease Enter Valid Age!" << endl;
 					cout << "\nPress any key to continue (x to exit)" << endl;
 					cout << ">> ";
-					user_input = getch();
-					if (user_input == 'x') {
+					cin >> user_input;
+					if (user_input == "x") {
 						return;
 					}
 					create_user_menu();
@@ -758,8 +767,8 @@ class Menu {
 				cout << "Password does not match" << endl;
 				cout << "\nPress any key to continue (x to exit)" << endl;
 				cout << ">> ";
-				user_input = getch();
-				if (user_input == 'x') {
+				cin >> user_input;
+				if (user_input == "x") {
 					return;
 				}
 				create_user_menu();
@@ -771,9 +780,9 @@ class Menu {
 
 		void display() {
 			while (true) {
-				char user_input;
+				string user_input;
 
-				system("cls");
+				system("clear");
 				cout << "Welcome to the Piggy Bank!\n" << endl;
 				cout << "How can I help you?" << endl;
 				cout << "1 - User Login" << endl;
@@ -781,20 +790,24 @@ class Menu {
 				cout << "x - Quit\n" << endl;
 				cout << ">> ";
 
-				user_input = getch();
+				cin >> user_input;
 
-				switch (user_input) {
-					case '1':
-						user_login_menu();
-						break;
-					case '2':
-						create_user_menu();
-						break;
-					case 'x':
-						cout << "\n\nThank you and have a nice day...\n" << endl;
-						return;
-					default:
-						break;
+				if (user_input.length() == 1) {
+					switch (user_input[0]) {
+						case '1':
+							user_login_menu();
+							break;
+						case '2':
+							create_user_menu();
+							break;
+						case 'x':
+							cout << "\n\nThank you and have a nice day...\n" << endl;
+							return;
+						default:
+							break;
+					}
+				} else {
+					break;
 				}
 			}
 		}
@@ -803,7 +816,7 @@ class Menu {
 
 // main function
 int main() {
-	_mkdir("data");
+	system("mkdir data");
 
 	Menu menu = Menu();
 	menu.display();
