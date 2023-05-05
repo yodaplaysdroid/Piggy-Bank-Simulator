@@ -1,824 +1,330 @@
-#include <iostream>
 #include <string>
-#include <fstream>
-#include <sstream>
-#include <sys/types.h>
-#include <sys/stat.h>
-// #include <curses.h>
-#include <limits>
-#include <vector>
-#include <cstdio>
+#include <iostream>
 
 using namespace std;
 
-class Transaction;
-class User;
-class Date;
 
-string read_file(string path);
-string read_line(string path, int line_number);
-int write_line(string path, int line_number, string input);
-int write_file(string path, string content);
-int append_file(string path, string content);
-double round(double var);
-double to_rm(string user_input);
-
-
-// UTILITIES
-// reading file
-string read_file(string path) {
-	ifstream file(path);
-	string output_string;
-	if (file) {
-		ostringstream ss;
-		ss << file.rdbuf();
-		output_string = ss.str();
-	}
-	file.close();
-	return output_string;
-}
-
-
-// reading line
-string read_line(string path, int line_number) {
-	fstream file(path);
-	file.seekg(std::ios::beg);
-    for (int i=0; i < line_number - 1; ++i) {
-        file.ignore(std::numeric_limits<std::streamsize>::max(),'\n');
-    }
-    string output;
-	file >> output;
-	file.close();
-	return output;
-}
-
-
-// writing line
-int write_line(string path, int line_number, string input) {
-    ifstream file(path);
-
-    vector<string> lines;
-    string line;
-    while (getline(file, line)) {
-        lines.push_back(line);
-    }
-
-    lines[line_number - 1] = input;
-
-    file.close();
-
-    ofstream outfile(path);
-
-    for (const auto& l : lines) {
-        outfile << l << endl;
-    }
-
-    outfile.close();
-    return 0;
-}
-
-
-// writing file
-int write_file(string path, string content) {
-	ofstream file(path);
-
-	file << content;
-	file.close();
-	return 0;
-}
-
-
-// appending file
-int append_file(string path, string content) {
-	ifstream file_0(path);
-	ofstream file;
-
-	file.open(path.c_str(), std::ios_base::app);
-	if (file_0) {
-		file << "\n";
-	}
-	file << content;
-	file_0.close();
-	file.close();
-	return 0;
-}
-
-
-// rounding currencies
-double round(double var) {
-    double value = (long)(var * 100 + .5);
-    return (double)value / 100;
-}
-
-
-// checking whether input currency is valid
-double to_rm(string user_input) {
-	bool is_number = true;
-	int dot_counter = 0;
-	for (int i = 0; i < user_input.length(); i++) {
-		if (!isdigit(user_input[i])) {
-			if (user_input[i] == '.') {
-				dot_counter++;
-			} else {
-				is_number = false;
-			}
-		}
-	}
-	if ((dot_counter <= 1) && (is_number)) {
-		return round(stod(user_input));
-	} else {
-		return -1;
-	}
-}
-
-
-// is number
-bool is_number(string var) {
-	for (int i = 0; i < var.length(); i++) {
-		if (!isdigit(var[i])) {
-			return false;
-		}
-	}
-	return true;
-}
-
-
-// define datetime class
-class Date {
-	public:
-		int year;
-		int month;
-		int day;
-
-		Date() {}
-		Date(int year, int month, int day) {
-			this->year = year;
-			this->month = month;
-			this->day = day;
-		}
-
-		bool set_date(string input_year, string input_month, string input_day) {
-			int year, month, day;
-			if (is_number(input_year) && is_number(input_month) && is_number(input_day)) {
-				year = stoi(input_year);
-				month = stoi(input_month);
-				day = stoi(input_day);
-				
-				if ((month > 12) || (month < 1)) {
-					return false;
-				}
-				if ((month == 4 ) || (month == 6 ) || (month == 9 ) || (month == 11 )) {
-					if ((day <= 30) && (day >= 1)) {
-						this->year = year;
-						this->month = month;
-						this->day = day;
-						return true;
-					}
-				} else if (month == 2) {
-					if ((year % 4) == 0) {
-						if ((day <= 29) && (day >= 1)) {
-							this->year = year;
-							this->month = month;
-							this->day = day;
-							return true;
-						}
-					} else {
-						if ((day <= 28) && (day >= 1)) {
-							this->year = year;
-							this->month = month;
-							this->day = day;
-							return true;
-						}
-					}
-				} else {
-					if ((day <= 31) && (day >= 1)) {
-						this->year = year;
-						this->month = month;
-						this->day = day;
-						return true;
-					}
-				}
-			}
-			return false;
-		}
-
-		void datestamp() {
-			cout << "(";
-			cout << year;
-			cout << "/";
-			cout << month;
-			cout << "/";
-			cout << day;
-			cout << ")";
-		}
-};
-
-
-// define transaction class
+// Transaction
+// for single transaction (deposit or withdraw action)
 class Transaction {
-	public:
-		string transaction_type;
-		double amount;
-		Date date;
-		string detail;
 
-		Transaction() {}
-		Transaction(string transaction_type, double amount, Date date) {
-			this->transaction_type = transaction_type;
-			this->amount = amount;
-			this->date = date;
-			string date_s = to_string(date.year) + "/" + to_string(date.month) + "/" + to_string(date.day);
-			this->detail = "\nDate : " + date_s + "\nTransaction Type : " + this->transaction_type + "\nAmount : " + to_string(this->amount) + "\n";
-		}
+	public:
+        int id;
+		float amount;
+        string type;
+        string day;
+
+        Transaction() {}
+        Transaction(float amount, string type, string day) {
+            this->amount = amount;
+            this->type = type;
+            this->day = day;
+        }
 };
 
+// Record
+// for keeping track of a user's transactions
+class Record {
 
-// define user account class
+    private:
+    	int index;
+        Transaction transaction[10];
+
+    public:
+        Record() {
+            this->index = 0;
+        }
+        
+        void add_transaction(Transaction transaction) {
+            this->transaction[this->index] = transaction;
+            this->transaction[this->index].id = this->index + 1;
+            this->index++;
+        }
+
+        void show_transactions() {
+            for (int i = 0; i < index; i++) {
+                if (this->transaction[i].id != -1){
+                    cout << "Transaction : " << this->transaction[i].id << endl;
+                    cout << "Amount : " << this->transaction[i].amount << endl;
+                    cout << "Action : " << this->transaction[i].type << endl;
+                    cout << "Day : " << this->transaction[i].day << endl;
+                    cout << "\n";
+                }
+            }
+        }
+
+        float delete_transaction(int id) {
+            float amount;
+            if (this->transaction[id-1].type == "deposit")  {
+                amount = 0 - this->transaction[id-1].amount;
+            } else {
+                amount = this->transaction[id-1].amount;
+            }
+            this->transaction[id-1].id = -1;
+            return amount;
+        }
+
+        void avg_per_day() {
+            string day[10];
+            for (int i = 0; i < index; i++) {
+                if (this->transaction[i].id != -1){
+                    day[i] = this->transaction[i].day;
+                }
+            }
+            for (int i = 0; i < index; i++) {
+                for (int j = i+1; j < index; j++) {
+                    if (day[i] == day[j]) {
+                        day[j] = "-1";
+                    }
+                }
+            }
+            cout << "Deposit" << endl;
+            for (int i = 0; i < index; i++) {
+                if (day[i] != "-1") {
+                    float sum = 0;
+                    int days = 0;
+                    for (int j = 0; j < index; j++) {
+                        if ((this->transaction[j].id != -1) && (this->transaction[j].day == day[i]) && (this->transaction[j].type == "deposit")) {
+                            sum += this->transaction[j].amount;
+                            days++;
+                        }
+                    }
+                    float avg = sum / days;
+                    cout << "day " << day[i] << " sum : " << sum << endl;
+                    cout << "day " << day[i] << " avg : " << avg << endl;
+                }
+            }
+            cout << "Withdrawal" << endl;
+            for (int i = 0; i < index; i++) {
+                if (day[i] != "-1") {
+                    float sum = 0;
+                    int days = 0;
+                    for (int j = 0; j < index; j++) {
+                        if ((this->transaction[j].id != -1) && (this->transaction[j].day == day[i]) && (this->transaction[j].type == "withdraw")) {
+                            sum += this->transaction[j].amount;
+                            days++;
+                        }
+                    }
+                    float avg = sum / days;
+                    cout << "day " << day[i] << " sum : " << sum << endl;
+                    cout << "day " << day[i] << " avg : " << avg << endl;
+                }
+            }
+        }
+};
+
+// User class
 class User {
-	public:
-		string username;
-		int age;
-		string password;
-		double balance;
-		string path;
-		string transaction_path;
 
-		User() {}
-		// user initialization
-		User(string username, int age, string password) {
-			this->username = username;
-			this->age = age;
-			this->password = password;
-			this->balance = 0;
-			this->path = "data/U_" + username;
-			this->transaction_path = "data/T_" + username;
+    public:
+        string name;
+        string age;
+        float balance;
+        Record cash_book;
 
-			append_file(this->path, this->password);
-			append_file(this->path, to_string(this->age));
-			append_file(this->path, to_string(this->balance));
-			write_file(this->transaction_path, "Transactions\n");
-		}
+        User() {}
 
-		double cash_deposit(double amount, Date date) {
-			this->balance += amount;
-			write_line(this->path, 3, to_string(this->balance));
-			Transaction t = Transaction("deposit", amount, date);
-			cout << t.detail;
-			append_file(transaction_path, t.detail);
-			return this->balance;
-		}
+        User(string name, string age) {
+            this->name = name;
+            this->age = age;
+            this->balance = 0;
+            this->cash_book = Record();
+        }
 
-		double cash_withdraw(double amount, Date date) {
-			this->balance -= amount;
-			write_line(this->path, 3, to_string(this->balance));
-			Transaction t = Transaction("withdraw", amount, date);
-			append_file(transaction_path, t.detail);
-			return this->balance;
-		}
+        void cash_deposit(float amount, string day) {
+            this->balance += amount;
+            this->cash_book.add_transaction(Transaction(amount, "deposit", day));
+        }
 
-		void show_transactions() {
-			cout << read_file(this->transaction_path);
-		}
+        void cash_withdrawal(float amount, string day) {
+            this->balance -= amount;
+            this->cash_book.add_transaction(Transaction(amount, "withdraw", day));
+        }
+
+        void show_history() {
+            this->cash_book.show_transactions();
+        }
+
+        void show_history(bool show_name) {
+            cout << this->name << endl;
+            this->cash_book.show_transactions();
+        }
+
+        void delete_transaction(int id) {
+            this->balance += this->cash_book.delete_transaction(id);
+        }
 };
 
+// create 5 preset users
+User users[5];
 
-// menu class
-class Menu {
-	private:
-		User current_user;
-		Date date;
-		
-		bool get_date() {
-			string year, month, day;
-			string user_input;
+// superuser for administration
+class Superuser : public User {
 
-			while (true) {
-				cout << "\nEnter Date\nYear  : ";
-				cin >> year;
-				cout << "Month : ";
-				cin >> month;
-				cout << "Day   : ";
-				cin >> day;
-				if (!date.set_date(year, month, day)) {
-					cout << "\nPlease enter valid date!" << endl;
-					cout << "\nPress any key to continue (x to exit)" << endl;
-					cout << ">> ";
-					cin >> user_input;
-					cout << "\n";
-					if (user_input == "x") {
-						return false;
-					}
-				} else {
-					return true;
-				}
-			}
-		}
-		void change_username() {
-			string user_input;
-			string new_username;
-			cout << "\n\nNew Username : ";
-			cin >> new_username;
+    private:
+        string password;
+    
+    public:
+        Superuser() {}
+        Superuser(string name, string age, string password) {
+            this->name = name;
+            this->age = age;
+            this->balance = 0;
+            this->cash_book = Record();
+            this->password = password;
+        }
 
-			string new_user_path = "data/U_" + new_username;
-			ifstream file(new_user_path);
-			if (file) {
-				file.close();
-				cout << "Username Unavailable" << endl;
-				cout << "\nPress any key to continue (x to exit)" << endl;
-				cout << ">> ";
-				cin >> user_input;
-				if (user_input == "x") {
-					return;
-				}
-				change_username();
-			} else {
-				file.close();
-				User new_user = User(new_username, current_user.age, current_user.password);
-				new_user.balance = current_user.balance;
-				write_file(new_user.transaction_path, read_file(current_user.transaction_path));
-
-				string path = current_user.path;
-				std::remove(path.c_str());
-				path = current_user.transaction_path;
-				std::remove(path.c_str());
-
-				current_user = new_user;
-
-				cout << "\nUsername Changed Successfully!" << endl;
-				cout << "\nPress any key to continue..." << endl;
-				cout << ">> ";
-				cin >> user_input;;
-				return;
-			}
-		}
-
-		void edit_age() {
-			string temp;
-			int new_age;
-			string user_input;
-
-			cout << "\n\nNew Age : ";
-			cin >> temp;
-
-			if (is_number(temp)) {
-				new_age = stoi(temp);
-				write_line(current_user.path, 2, temp);
-				current_user.age = new_age;
-
-				cout << "\nAge Changed Successfully!" << endl;
-				cout << "\nPress any key to continue..." << endl;
-				cout << ">> ";
-				cin >> user_input;;
-				return;
-			} else {
-				cout << "\nPlease Enter Valid Age!" << endl;
-				cout << "\nPress any key to continue (x to exit)" << endl;
-				cout << ">> ";
-				cin >> user_input;
-				if (user_input == "x") {
-					return;
-				}
-				edit_age();
-			}
-		}
-
-		void change_password() {
-			string old_password;
-			string new_password;
-			string new_password_confirmation;
-			string user_input;
-
-			cout << "\n\nOld Password : ";
-			cin >> old_password;
-			if (old_password == current_user.password) {
-				cout << "New Password : ";
-				cin >> new_password;
-				cout << "Retype New Password : ";
-				cin >> new_password_confirmation;
-				
-				if (new_password == new_password_confirmation) {
-					current_user.password = new_password;
-					write_line(current_user.path, 1, new_password);
-					
-					cout << "\nPassword Changed Successfully!" << endl;
-					cout << "\nPress any key to continue..." << endl;
-					cout << ">> ";
-					cin >> user_input;
-					return;
-				} else {
-					cout << "\nPassword Not Matching!" << endl;
-					cout << "\nPress any key to continue (x to exit)" << endl;
-					cout << ">> ";
-					cin >> user_input;
-					if (user_input == "x") {
-						return;
-					}
-					change_password();
-				}
-			} else {
-				cout << "\nPassword Incorrect!" << endl;
-				cout << "\nPress any key to continue (x to exit)" << endl;
-				cout << ">> ";
-				cin >> user_input;
-				if (user_input == "x") {
-					return;
-				}
-				change_password();
-			}
-		}
-
-		void edit_account() {
-			string user_input;
-
-			while (true) {
-				system("clear");
-				cout << "Edit Account Menu\n" << endl;
-				cout << "1 - Edit Username" << endl;
-				cout << "2 - Edit Age" << endl;
-				cout << "3 - Change Password" << endl;
-				cout << "x - Return\n" << endl;
-				cout << ">> ";
-				cin >> user_input;
-				if (user_input.length() == 1) {
-					switch (user_input[0]) {
-						case '1':
-							change_username();
-							return;
-						case '2':
-							edit_age();
-							return;
-						case '3':
-							change_password();
-							return;
-						case 'x':
-							return;
-						default:
-							break;
-					}
-				} else {
-					break;
-				}
-			}
-		}
-
-		void cash_deposit_menu() {
-			string user_input;
-			string temp;
-			double amount;
-
-			system("clear");
-			cout << "Cash Deposit Menu\n" << endl;
-			cout << "Enter Amount : ";
-			cin >> temp;
-			amount = to_rm(temp);
-			if (amount == -1) {
-				cout << "Please enter valid amount" << endl;
-				cout << "\nPress any key to continue (x to exit)" << endl;
-				cout << ">> ";
-				cin >> user_input;
-				if (user_input == "x") {
-					return;
-				}
-				cash_deposit_menu();
-			} else {
-				current_user.cash_deposit(amount, date);
-				printf("\nDeposited  : RM %.2f", amount);
-				printf("\nNew Amount : RM %.2f\n\n", current_user.balance);
-				cout << "\nPress any key to continue..." << endl;
-				cout << ">> ";
-				cin >> user_input;
-			}
-			return;
-		}
-
-		void cash_withdrawal_menu() {
-			string user_input;
-			string temp;
-			double amount, new_amount;
-
-			system("clear");
-			cout << "Cash Withdrawal Menu\n" << endl;
-			cout << "Enter Amount : ";
-			cin >> temp;
-			amount = to_rm(temp);
-			if (amount == -1) {
-				cout << "Please enter valid amount" << endl;
-				cout << "\nPress any key to continue (x to exit)" << endl;
-				cout << ">> ";
-				cin >> user_input;
-				if (user_input == "x") {
-					return;
-				}
-				cash_withdrawal_menu();
-			} else {
-				new_amount = current_user.balance - amount;
-				if (new_amount < 0) {
-					cout << "Insufficient Balance!" << endl;
-					cout << "\nPress any key to continue (x to exit)" << endl;
-					cout << ">> ";
-					cin >> user_input;
-					if (user_input == "x") {
-						return;
-					}
-					cash_withdrawal_menu();
-				} else {
-					current_user.cash_withdraw(amount, date);
-					printf("\nWithdrawed : RM %.2f", amount);
-					printf("\nNew Amount : RM %.2f\n\n", new_amount);
-					cout << "\nPress any key to continue..." << endl;
-					cout << ">> ";
-					cin >> user_input;
-				}
-			}
-			return;
-		}
-
-		void account_display() {
-			string user_input;
-
-			while (true) {
-				system("clear");
-				cout << "My Account\n" << endl;
-				cout << "Username : " << current_user.username << endl;
-				cout << "Age      : " << current_user.age << endl;
-				printf("Balance  : RM %.2f\n\n", current_user.balance);
-				cout << "1 - Edit Account Credentials" << endl;
-				cout << "2 - Transaction History" << endl;
-				cout << "x - Return\n" << endl;
-				cout << ">> ";
-				cin >> user_input;
-				if (user_input.length() == 1) {
-					switch (user_input[0]) {
-						case '1':
-							edit_account();
-							break;
-						case '2':
-							system("clear");
-							current_user.show_transactions();
-							cout << "\n\nPress any key to continue..." << endl;
-							cout << ">> ";
-							cin >> user_input;
-							break;
-						case 'x':
-							return;
-						default:
-							break;
-					}
-				} else {
-					break;
-				}
-			}
-		}
-
-		void operation_menu() {
-			string user_input;
-			string delete_confirmation;
-			string password;
-
-			while (true) {
-				system("clear");
-				cout << "Operation Menu" << endl;
-				date.datestamp();
-				cout << "\n\n1 - Cash Deposit" << endl;
-				cout << "2 - Cash Withdrawal" << endl;
-				cout << "3 - My Account" << endl;
-				cout << "4 - Delete Account" << endl;
-				cout << "x - Logout\n" << endl;
-				cout << ">> ";
-				cin >> user_input;
-				
-				if (user_input.length() == 1) {
-					switch (user_input[0]) {
-						case '1':
-							cash_deposit_menu();
-							break;
-						case '2':
-							cash_withdrawal_menu();
-							break;
-						case '3':
-							account_display();
-							break;
-						case '4':
-							cout << "\n\nEnter Password : ";
-							cin >> password;
-							if (password != current_user.password) {
-								cout << "\nPassword Incorrect" << endl;
-								cout << "Operation Aborted" << endl;
-								cout << "\nPress any key to continue..." << endl;
-								cout << ">> ";
-								cin >> user_input;
-								date = Date();
-								current_user = User();
-								return;
-							}
-							cout << "\n\nWarning : Account Delete Confirmation" << endl;
-							cout << "Type 'confirm'" << endl;
-							cout << ">> ";
-							cin >> delete_confirmation;
-							if (delete_confirmation == "confirm") {
-								std::remove(current_user.path.c_str());
-								std::remove(current_user.transaction_path.c_str());
-
-								cout << "\nRemoved Successfully!" << endl;
-								cout << "\nPress any key to continue..." << endl;
-								cout << ">> ";
-								cin >> user_input;
-							} else {
-								cout << "Operation Aborted" << endl;
-								cout << "\nPress any key to continue..." << endl;
-								cout << ">> ";
-								cin >> user_input;
-							}
-
-							date = Date();
-							current_user = User();
-							return;
-						case 'x':
-							date = Date();
-							current_user = User();
-							return;
-						default:
-							break;
-					}
-				} else {
-					break;
-				}
-			}
-		}
-
-		void user_login_menu() {
-			string user_input;
-			string username;
-			string password;
-			string input_password;
-			string year, month, day;
-
-			system("clear");
-			cout << "User Login Page\n" << endl;
-			cout << "Username : ";
-			cin >> username;
-			if (username == "x") {
-				return;
-			}
-			string user_path = "data/U_" + username;
-			ifstream file(user_path);
-			if (file) {
-				file.close();
-				cout << "Password : ";
-				cin >> input_password;
-				password = read_line(user_path, 1);
-				if (input_password == password) {
-					if (get_date()) {
-						current_user.username = username;
-						current_user.password = password;
-						current_user.age = stoi(read_line(user_path, 2));
-						current_user.balance = stod(read_line(user_path, 3));
-						current_user.path = "data/U_" + username;
-						current_user.transaction_path = "data/T_" + username;
-						operation_menu();
-					}
-				} else {
-					cout << "Password Incorrect!" << endl;
-					cout << "\nPress any key to continue (x to exit)" << endl;
-					cout << ">> ";
-					cin >> user_input;
-					if (user_input == "x") {
-						return;
-					}
-					user_login_menu();
-				}
-			} else {
-				file.close();
-				cout << "User does not exist!" << endl;
-				cout << "\nPress any key to continue (x to exit)" << endl;
-				cout << ">> ";
-				cin >> user_input;
-				if (user_input == "x") {
-					return;
-				}
-				user_login_menu();
-			}
-			return;
-		}
-
-		void create_user_menu() {
-			string user_input;
-			string username;
-			string password;
-			string confirmation;
-			int age;
-			string tmp;
-
-			system("clear");
-			cout << "Create User Page\n" << endl;
-
-			cout << "New Username (Username must be unique) : ";
-			cin >> username;
-			if (username == "x") {
-				return;
-			}
-
-			string user_path = "data/U_" + username;
-			ifstream file(user_path);
-			if (file) {
-				cout << "Username Unavailable" << endl;
-				cout << "\nPress any key to continue (x to exit)" << endl;
-				cout << ">> ";
-				cin >> user_input;
-				if (user_input == "x") {
-					return;
-				}
-				create_user_menu();
-			}
-
-			cout << "New Password : ";
-			cin >> password;
-			cout << "Retype Password : ";
-			cin >> confirmation;
-
-			if (password == confirmation) {
-				cout << "Age : ";
-				cin >> tmp;
-
-				if (is_number(tmp)) {
-					age = stoi(tmp);
-					
-					User user = User(username, age, password);
-
-					cout << "\nUser Created Successfully!" << endl;
-					cout << "Username : " << username << endl;
-					cout << "Age : " << age << endl;
-					cout << "Balance : RM 0.00" << endl;
-					cout << "\nPress any key to continue..." << endl;
-					cout << ">> ";
-					cin >> user_input;
-					return;
-				} else {
-					cout << "\nPlease Enter Valid Age!" << endl;
-					cout << "\nPress any key to continue (x to exit)" << endl;
-					cout << ">> ";
-					cin >> user_input;
-					if (user_input == "x") {
-						return;
-					}
-					create_user_menu();
-				}
-			} else {
-				cout << "Password does not match" << endl;
-				cout << "\nPress any key to continue (x to exit)" << endl;
-				cout << ">> ";
-				cin >> user_input;
-				if (user_input == "x") {
-					return;
-				}
-				create_user_menu();
-			}
-		}
-
-	public:
-		Menu() {}
-
-		void display() {
-			while (true) {
-				string user_input;
-
-				system("clear");
-				cout << "Welcome to the Piggy Bank!\n" << endl;
-				cout << "How can I help you?" << endl;
-				cout << "1 - User Login" << endl;
-				cout << "2 - Create User" << endl;
-				cout << "x - Quit\n" << endl;
-				cout << ">> ";
-
-				cin >> user_input;
-
-				if (user_input.length() == 1) {
-					switch (user_input[0]) {
-						case '1':
-							user_login_menu();
-							break;
-						case '2':
-							create_user_menu();
-							break;
-						case 'x':
-							cout << "\n\nThank you and have a nice day...\n" << endl;
-							return;
-						default:
-							break;
-					}
-				} else {
-					break;
-				}
-			}
-		}
+        bool view_all_transactions(string password) {
+            if (this->password == password) {
+                for (int i = 0; i <= 4; i++) {
+                    cout << users[i].name << endl;
+                    users[i].show_history(true);
+                }
+                return true;
+            } else {
+                cout << "password incorrect" << endl;
+                return false;
+            }
+        }
 };
 
+// create a default superuser
+Superuser su;
 
-// main function
+// display ui
+class Session {
+    
+    public:
+
+        string t;
+        string input;
+        User user;
+
+        Session() {}
+
+        void user_login() {
+            string name;
+            string age;
+
+            cout << "user login" << endl;
+            cout << "name : ";
+            cin >> name;
+
+            cout << "age : ";
+            cin >> age;
+
+            this->user = User(name, age);
+
+            while (this->input != "x") {
+                display();
+            }
+        }
+
+    private:
+        void display() {
+            cout << "1 : deposit cash" << endl;
+            cout << "2 : withdraw cash" << endl;
+            cout << "3 : view balance" << endl;
+            cout << "4 : delete transaction" << endl;
+            cout << "5 : transaction history" << endl;
+            cout << "6 : view all" << endl;
+            cout << "x : exit" << endl;
+            cin >> this->input;
+
+            if (this->input == "1") {
+                deposit_cash_menu();
+            } else if (this->input == "2") {
+                withdraw_cash_menu();
+            } else if (this->input == "3") {
+                view_balance();
+            } else if (this->input == "4") {
+                delete_trans_menu();
+            } else if (this->input == "5") {
+                show_history();
+            } else if (this->input == "6") {
+                view_all_menu();
+            }
+        }
+
+        void view_balance() {
+            cout << "Balance : " << endl;
+            cout << this->user.balance << endl;
+            return;
+        }
+
+        void show_history() {
+            cout << "History : " << endl;
+            this->user.cash_book.show_transactions();
+            this->user.cash_book.avg_per_day();
+        }
+
+        void deposit_cash_menu() {
+            string amount, day;
+            cout << "deposit amount : ";
+            cin >> amount;
+            cout << "day no. (eg. 0, 1, 2, 3, 4 ...) : ";
+            cin >> day;
+            this->user.cash_deposit(stof(amount), day);
+            return;
+        }
+
+        void withdraw_cash_menu() {
+            string amount, day;
+            cout << "withdraw amount : ";
+            cin >> amount;
+            cout << "day (eg. 0, 1, 2, 3, 4 ...) : ";
+            cin >> day;
+            this->user.cash_withdrawal(stof(amount), day);
+            return;
+        }
+
+        void delete_trans_menu() {
+            string id;
+            cout << "enter transaction id : ";
+            cin >> id;
+            this->user.delete_transaction(stoi(id));
+            return;
+        }
+
+        void view_all_menu() {
+            string name, password;
+            cout << "su name : ";
+            cin >> name;
+            cout << "su password : ";
+            cin >> password;
+
+            if (su.name == name) {
+                if (su.view_all_transactions(password)) {
+                    cout << this->user.name << endl;
+                    this->user.cash_book.show_transactions();
+                }
+            } else {
+                cout << "name incorrect" << endl;
+            }
+        }
+};
+
+void create_preset_data() {
+    users[0] = User("Wei Yin", "21");
+    users[1] = User("Oscar", "22");
+    users[2] = User("Lee", "23");
+    users[3] = User("Muthu", "19");
+    users[4] = User("Nur", "20");
+    su = Superuser("admin", "99", "admin");
+
+    for (int i = 0; i <= 4; i++) {
+        users[i].cash_deposit(1000, "0");
+        users[i].cash_deposit(2000, "0");
+        users[i].cash_deposit(1500, "1");
+        users[i].cash_withdrawal(800, "1");
+        users[i].cash_withdrawal(600, "1");
+    }
+}
+
 int main() {
-	system("mkdir data");
 
-	Menu menu = Menu();
-	menu.display();
-	return 0;
+    create_preset_data();
+    Session session = Session();
+    session.user_login();
+    return 0;
 }
